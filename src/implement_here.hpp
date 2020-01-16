@@ -54,12 +54,3 @@ bool isSmaller(std::string_view left, std::string_view right)
 // One for loop for multiple iterators is possible
 // from_chars uses an output variable while returning a pair to signal error condition, interesting design
 // You cannot add to an iterator behind the end of the container, e.g. for checking a condition
-int main()
-{
-	auto bigger = "abcd0001efgh";
-	auto smaller = "abcd00000000001efgh";
-
-	std::cout << "Is " << smaller << " smaller than " << bigger << "?" << std::endl;
-	std::cout << isSmaller(smaller, bigger);
-	std::cin.get();
-}
