@@ -49,7 +49,10 @@ int natural_3way_compare(std::string_view left, std::string_view right)
 		{
 			continue;
 		}
-		return right[right_index] - left[left_index];
+		
+		// regular ascii comparison
+		return std::abs(left[left_index] - right[right_index]);
+
 	}
 	if (left.size() < right.size())
 	{

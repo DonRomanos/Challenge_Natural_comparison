@@ -43,6 +43,16 @@ TEST(AlphanumericalComparisonTests, More_prepending_zeros_should_come_first)
     EXPECT_EQ(input, expected);
 }
 
+TEST(AlphanumericalComparisonTests, Comparison_is_case_sensitive)
+{
+    std::vector<std::string> input = { "abc1", "Abc0001", "ac01" };
+    std::vector<std::string> expected = { "Abc0001", "abc1", "ac01" };
+
+    std::sort(input.begin(), input.end(), natural_compare);
+
+    EXPECT_EQ(input, expected);
+}
+
 TEST(AlphanumericalComparisonTests, When_one_is_prefix_of_the_other_longer_one_should_come_last)
 {
     std::vector<std::string> input = { "abc1eeee", "abc1" };
