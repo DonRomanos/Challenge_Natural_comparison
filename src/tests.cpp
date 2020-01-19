@@ -65,7 +65,12 @@ TEST(AlphanumericalComparisonTests, When_one_is_prefix_of_the_other_longer_one_s
 
 TEST(AlphanumericalComparisonTests, Handling_empty_strings_should_not_throw)
 {
-    EXPECT_TRUE(natural_compare("", "") == 0);
+    EXPECT_FALSE(natural_compare("", ""));
+}
+
+TEST(AlphanumericalComparisonTests, Comparing_single_digit_strings_should_not_throw)
+{
+    EXPECT_TRUE(natural_compare("1", "2"));
 }
 
 // Had some Problems with the conan cmake_find_package generator, 
