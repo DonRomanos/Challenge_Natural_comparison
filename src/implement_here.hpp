@@ -7,62 +7,81 @@
 
 // solution two for strings with std::missmatch and iterators
 // todo here:
-
-int natural_3way_compare(std::string_view left, std::string_view right)
+inline int compare_character(const char lhs, const char rhs)
 {
-	auto left_index = 0, right_index = 0;
-	for (; left_index < left.size() && right_index < right.size() ; ++left_index, ++right_index)
-	{
-		if (std::isdigit(left[left_index]) && std::isdigit(right[right_index]))
-		{
-			auto sequence_end_left = left_index + 1;
-			for (; sequence_end_left < left.size() && std::isdigit(left[sequence_end_left]); ++sequence_end_left);
-			auto sequence_end_right = right_index + 1;
-			for (; sequence_end_right < right.size() && std::isdigit(right[sequence_end_right]); ++sequence_end_right);
+	if (lhs == rhs)	return 0;
+	else if (lhs < rhs)	return -1;
+	else return 1;
+}
 
-			unsigned int left_value, right_value;
-			// No error handling ... as there should not be any conversion error possible since we only convert digits
-			std::from_chars(left.data() + left_index, left.data() + sequence_end_left, left_value);
-			std::from_chars(right.data() + right_index, right.data() + sequence_end_right, right_value);
-			if (left_value == right_value)
-			{
-				// When prepending zeros are in we compare the size more prepending zeroes must come first.
-				if (sequence_end_left - left_index > sequence_end_right - right_index)
-				{
-					return -1;
-				}
-				else if (sequence_end_left - left_index < sequence_end_right - right_index)
-				{
-					return 1;
-				}
-				left_index = sequence_end_left-1;
-				right_index = sequence_end_right-1;
-				continue;
-			}
-			else if ( left_value < right_value)
-			{
-				return -1;
-			}
-			return 1;
-		}
-		else if(left[left_index] == right[right_index])
-		{
-			continue;
-		}
-		
-		// regular ascii comparison
-		return std::abs(left[left_index] - right[right_index]);
+inline int compare_number(unsigned int lhs, unsigned int rhs)
+{
+	// Could be written as return abs(lhs-rhs) but i find this clearer (also no casts neccessary because of the unsigned)
+	if (lhs == rhs) return 0;
+	else if (lhs < rhs) return -1;
+	else return 1;
+}
 
-	}
-	if (left.size() < right.size())
+inline int to_number(std::string_view digits)
+{
+	unsigned int value;
+	std::from_chars(digits.data(), digits.data() + digits.size(), value);
+	// no error handling as input of digits should never produce an error.
+	return value;
+}
+
+inline int compare_digit_sequence(std::string_view lhs, std::string_view rhs)
+{
+	auto lhs_value = to_number(lhs);
+	auto rhs_value = to_number(rhs);
+	if (lhs_value < rhs_value) return -1;
+	else if (lhs_value > rhs_value) return +1;
+
+	// We want sort according to prepending zeros if values are equal
+	if (lhs.size() == rhs.size()) return 0;
+	else if (lhs.size() > rhs.size()) return -1;
+	else return 1;
+}
+
+inline int compare_size(std::string_view lhs, std::string_view rhs)
+{
+	if (lhs.size() == rhs.size()) return 0;
+	else if (lhs.size() < rhs.size()) return -1;
+	else return 1;
+}
+
+inline int get_length_of_digit_sequence(std::string_view digit_sequence)
+{
+	auto counter = 0;
+	while (counter < digit_sequence.size() && std::isdigit(digit_sequence[counter]))
 	{
-		return -1;
+		++counter;
 	}
-	else if (left.size() > right.size())
+	return counter;
+}
+
+int natural_3way_compare(std::string_view lhs, std::string_view rhs)
+{
+	for (auto lhs_index = 0, rhs_index = 0; lhs_index < lhs.size() && rhs_index < rhs.size(); ++lhs_index, ++rhs_index)
 	{
-		return 1;
+		if (std::isdigit(lhs[lhs_index]) && std::isdigit(rhs[rhs_index]))
+		{
+			auto lhs_number_length = get_length_of_digit_sequence(lhs.substr(lhs_index));
+			auto rhs_number_length = get_length_of_digit_sequence(rhs.substr(rhs_index));
+			if (auto result = compare_digit_sequence(lhs.substr(lhs_index, lhs_number_length), rhs.substr(rhs_index, rhs_number_length)); result != 0)
+			{
+				return result;
+			}
+			// update iterators
+			lhs_index += lhs_number_length - 1;
+			rhs_index += rhs_number_length - 1;
+		}
+		else if(auto result = compare_character(lhs[lhs_index], rhs[rhs_index]); result != 0)
+		{
+			return result;
+		}
 	}
-	return 0;
+	return compare_size(lhs, rhs);
 }
 
 
