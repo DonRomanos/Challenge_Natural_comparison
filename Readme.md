@@ -1,33 +1,36 @@
-# Alphanumerical Comparison
+# Write a C++ natural sorting algorithm
 
 A small problem I once encountered and deemed interesting.
 
 ## Task
 
-Provide an algorithm that can sort strings in alphanumerical order.
-This is the way a human would usually order it, e.g.
+We want to sort a collection of strings which contain letters and numbers in a natural way, meaning like a human would. Example sequence after sorting:
 
-* abcd1
+* abcd0001
 * abcd01
-* abcd001
-* ...
+* abcd1
+* abcd10
+* abcd1000
 
 This is in contrast to the standard lexicographical comparison the regular strings use, but often needed for example for UIs to show data in a correct and expected order.
 
+I added a few specialities, e.g. we differentiate prepending zeros in numbers, and we consider cases of letters.
+
 ### Requirements
 
-Provide a function that takes two character sequences and returns a bool, creating an ordering so that:
+Provide a function that can be passed to **std::sort** which will sort the elements so that all of the following requirements are met.
 
-* abcd1 is smaller than abcd01
-* it can handle really large sequences > ...
+* natural order is fulfilled with any numbers, e.g.  "abc2c" comes before "abc10c"
+* if two numbers are equal but have a different number of prepending zeros, the one with more prepending zeros should come first, e.g. "0010_abc" before "010_abc"
+* capital letters should come first, e.g. "Abc" before "abc"
 * you do not need to consider negative numbers e.g. - is not treated as part of a number
-* prepeding zeros have to be considered so that sequences with less zeros come first
+* floating point numbers are also not considered e.g. "abc100.2" and "abc100.01" don't have to work
 
 **This should be fulfilled when all unit tests are green!**
 
 ## Goal
 
-Play a bit around with google benchmark, some of the new standards keywords.
+Write a conciouscious implementation of a common algorithm, consider readability and performance.
 
 **Note:**
 There is a benchmark, where you can compare your implementation against mine in terms of performance. I am really curious about any results you get, let me know.
@@ -95,133 +98,30 @@ or via the gui by adding a path entry with the name.
 
 If you are curious how my implementation went and what I learned during developement take a peek.
 
-I can say that this was suprisingly tough for me and I was googling and stackoverflowing quite a lot during developement.
-
 <details><summary>Spoiler Alert</summary>
 <p>
 
-First some dry theory... if you just want to see my personal remarks, you can find them at the end.
+I changed my approach during developement quite a bit, you can check the first git commits, compared to my final code and get a grasp of the developement. In the beginning I tried to have the complete algorithm within one function, but it became quite complex and unreadable so I ended up splitting it up.
 
-### Requirements for STL-Iterators
+In the end this seems to be the better way to me, as its more concise and can be more easily adapted to for example a change in requirements (since digits and regular characters are handled in different functions for example ignoring spaces can be added quite easily).
 
-The STL knows four different types of iterators, each with its own requirements:
+It was quite a suprise how complex such a seemingly simple algorithm would become when all the requirements were considered.
 
-* input_iterator
-* output_iterator
-* forward_iterator
-* bidirectional_iterator
-* random_access_iterator
-* contiguous_iterator (since C++20)
+Separating the algorithm in terms of different requirement, e.g. for numbers and characters worked quite well to reduce the complexity and focus on partial problems then the implementation went much smoother. **-->Recommended**
 
-You have to provide the following typedefs / aliases inside an iterator class to make it usable with stl-algorithms.
- (There used to be a std::iterator template which you could inherit but it was deprecated due to readability issues, you can read more about it here: [FluentCpp - Why std::iterator was deprecated](https://www.fluentcpp.com/2018/05/08/std-iterator-deprecated/) )
+### Short remarks
 
-* difference_type
-* value_type
-* pointer
-* reference
-* **iterator_category** (one of the above four + _tag)
-
-The interesting part here is actually only the iterator category. The category is ordered in a way that each iterator is more constraining then the one before and requires you to provide more methods.
-
-Most important are:
-
-* equality comparable: operator==
-* dereferencable: operator* / operator->
-* incrementable: pre- / postincrement
-* decrementable: pre- / postdecrement
-
-For Random Access Iterators:
-
-* ordering: <,>,<=,>=
-* arithmetic: +=, -=, +, - (with iterators and ints)
-* arbitrary dereferencing: operator[]
-
-(My iterator does not actually provide all of the above but only most, as I created it specifically for std::find and std::sort)
-
-An output iterator is a bit special as almost all types will be void. It only requires increment and assignment, it cannot be used to read a value.
-
-The reason for the iterator category is a performance optimization, behind it stands a technique called tag-dispatching.
-
-#### Tag Dispatching
-
-We use the compiler to select the correct code path at compile time. This requires no virtual dispatch and should therefore be faster.
-
-Simple Example:
-
-```cpp
-template<typename T>
-int distance(T first, T second, random_access_iterator_tag)
-{
-    return second - first;
-}
-
-template<typename T>
-int distance(T first, T second, forward_iterator_tag)
-{
-    int distance = 0;
-    while(first != second)
-    {
-        ++distance;
-    }
-    return distance;
-}
-
-template<typename T>
-int distance(T first, T second)
-{
-    return distance(first, second, T::iterator_category)
-}
-```
-
-### The Problem of Constness
-
-Most STL containers provide in addition to regular iterators also const versions, which leads us to the problem of code duplication, as the const and non const version have basically the same methods with only some consts that differ.
-
-This is a bit tricky and can be solved in numerous ways.
-
-I decided to go for a template, where I use a boolean flag to decide wheter the iterator is const or not. To disable certain methods for each kind enable_if is used.
-
-With this combination we can pack everything into one class and have basically no duplication.
-
-The conversion from iterator to const_iterator is implemented with an enable_if custom conversion operator only for const_iterator.
-
-This way I only ever need to include typedefs in my class, everything else is automatically taken care of(like equality comparison etc).
-
-The basic idea is from [here](https://stackoverflow.com/questions/2150192/how-to-avoid-code-duplication-implementing-const-and-non-const-iterators).
-
-#### Code duplication in Const and Non-Const Member Functions
-
-Something unrelated I learned while googling. The right way to avoid code duplication in const and non-const Member functions is to have the non-const version call the const one and not the other way around!
-
-So the logic is in the const function! Makes sense when I thought about it, but is a bit counter intuitive. See [here](https://stackoverflow.com/questions/123758/how-do-i-remove-code-duplication-between-similar-const-and-non-const-member-func) for an explanation.
-
-Example:
-
-```cpp
-T const & f() const {
-    return something_complicated();
-}
-T & f() {
-    return const_cast<T &>(std::as_const(*this).f());
-}
-```
-
-### Learnings in short
-
-* Spaceship operator is very useful, if you use *=default* it takes care of equality comparisons as well ( if you use a custom one you have to provide it yourself)
-* *Don't* try to *dereference* an *.end iterator* even if you never plan to do anything with the element
-* \+ takes precedence over any \* -> & operators
-* Changing the signature of a function based on a template parameter is possible using SFINAE e.g. const and non-const functions
-* Use the following keywords whenever appropriate: const, [[nodiscard]], noexcept, explicit
+* **string_view** does not work well with iterators, I had to use indices instead
+* **from_chars** is not constexpr so I could not make my implementation constexpr
 
 </p>
 </details>
 
 ## For the Future
 
-If I find some time and am in the right mood, I will expand this to provide a proper container, not something as basic as this.
-
-Also if you can use [boost](https://www.boost.org/doc/libs/1_65_0/libs/iterator/doc/iterator_facade.html) there are a lot of convenience types and iterator facades which do most of the work for you, so no need to implement this yourself ;).
+* An implementation with strings and iterators would be cool for performance comparison. For that the current approach can probably be templated and reused.
+* This would be an interesting candidate for performance analysis and improvements maybe I can write a second version which focusses solely on performance
+* Handling for floating point numbers can be added
+* Handling of negative numbers can be added
 
 ## Please give me some Feedback if this helped or you have any suggestions or remarks
