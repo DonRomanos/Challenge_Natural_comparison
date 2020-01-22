@@ -91,15 +91,19 @@ bool natural_compare(std::string_view left, std::string_view right)
 	return natural_3way_compare(left, right) < 0;
 }
 
-
 // Learnings:
 // no need for const in string_view does not make sense since nothing can modify it anyway
 // string_views are not guaranteed null terminated
 // from_chars uses an output variable while returning a pair to signal error condition, interesting design
 // You cannot add to an iterator behind the end of the container, e.g. for checking a condition even if you never dereference it
-// Never dereference iterators if you dont have to, especially end iterators you moron!
-// 
+// Never dereference iterators if you dont have to, especially end iterators
+// from_chars is not constexpr
 
 // Strict weak ordering: a < b, => ! b < a, if not a < b and not b < a, then == equivalent
 // Weak ordering:        a <= b && b <= a means they are either equivalent, but if 
 //                       not a <= b, and not b <= a means they are incomparable
+
+// template Non-types can be a
+// lvalue reference, nullptr, pointer, enumerator, integral
+// meaning you can define templates like this: template<int(*functionp)(int)> void doSomething() and instantiate it like this template void doSomething<function>();
+// Compile time function pointers :p
