@@ -1,6 +1,6 @@
 #pragma once
 
-#include "implement_here.hpp"
+#include "challenge.hpp"
 
 #include "benchmark/benchmark.h"
 
@@ -11,7 +11,6 @@
 // --> compare strings of length 2 - 1024 always same content, once with numbers only, once with letters only.
 
 /***************************************************************/
-using ChallengeSignature = bool(*)(std::string_view, std::string_view);
 
 template <char Character, ChallengeSignature T> void BM_Comparison_of_character(benchmark::State& state)
 {
@@ -26,10 +25,10 @@ template <char Character, ChallengeSignature T> void BM_Comparison_of_character(
 
 /***************************************************************/
 #ifdef BUILD_REFERENCE
-BENCHMARK_TEMPLATE(BM_SomeFunc, reference::SomeClass)->Range(1 << 0, 1 << 10)->Complexity();
+BENCHMARK_TEMPLATE(BM_Comparison_of_character, 'a', reference::natural_compare)->RangeMultiplier(2)->Range(2, 2 << 10)->Complexity();
+BENCHMARK_TEMPLATE(BM_Comparison_of_character, '1', reference::natural_compare)->RangeMultiplier(2)->Range(2, 2 << 10)->Complexity();
 #endif
 BENCHMARK_TEMPLATE(BM_Comparison_of_character, 'a', natural_compare)->RangeMultiplier(2)->Range(2, 2 << 10)->Complexity();
 BENCHMARK_TEMPLATE(BM_Comparison_of_character, '1', natural_compare)->RangeMultiplier(2)->Range(2, 2 << 10)->Complexity();
-
 
 BENCHMARK_MAIN();

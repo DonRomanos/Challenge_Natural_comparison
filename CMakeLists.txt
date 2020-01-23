@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(Alphanumerical_Comparison)
+project(natural_comparison)
 
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(challenge::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} INTERFACE
-	src/implement_here.hpp)
+	src/challenge.hpp)
 
 # Normally I would make this private, but since this is my own and I am lazy I can do this :)
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
