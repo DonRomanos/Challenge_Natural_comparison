@@ -75,7 +75,9 @@ TEST_P(NaturalComparisonTest, Comparing_single_digit_strings_should_not_throw)
 }
 
 INSTANTIATE_TEST_CASE_P(ChallengeTests, NaturalComparisonTest, testing::Values(natural_compare));
-INSTANTIATE_TEST_CASE_P(ReferenceTests, NaturalComparisonTest, testing::Values(reference::natural_compare));
+#ifdef BUILD_REFERENCE
+    INSTANTIATE_TEST_CASE_P(ReferenceTests, NaturalComparisonTest, testing::Values(reference::natural_compare));
+#endif
 
 // Had some Problems with the conan cmake_find_package generator, 
 // it does not generate the correct targets therefore we dont have a gtest_main target
